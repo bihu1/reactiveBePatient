@@ -1,8 +1,9 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.disease;
 
-import com.dryPepperoniStickTeam.bePatient.domain.disease.http.model.DiseaseDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.disease.http.model.DiseaseUpdate;
-import com.dryPepperoniStickTeam.bePatient.domain.disease.http.model.DiseaseView;
+import com.bihuniak.piotr.reactiveBePatient.ObjectIdValid;
+import com.bihuniak.piotr.reactiveBePatient.domain.disease.http.model.DiseaseDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.disease.http.model.DiseaseUpdate;
+import com.bihuniak.piotr.reactiveBePatient.domain.disease.http.model.DiseaseView;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -10,12 +11,15 @@ import io.swagger.annotations.Authorization;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api")
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -30,8 +34,8 @@ public class DiseaseController {
             @ApiResponse(code = 404, message = "Disease not found")
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public DiseaseView getDiseases(
-            @PathVariable long diseaseId
+    public Mono<DiseaseView> getDiseases(
+            @PathVariable @ObjectIdValid String diseaseId
     ){
        return diseaseService.getDisease(diseaseId);
     }
@@ -42,7 +46,7 @@ public class DiseaseController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public List<DiseaseView> getDiseases(){
+    public Flux<DiseaseView> getDiseases(){
         return diseaseService.getAllDiseases();
     }
 
@@ -53,9 +57,9 @@ public class DiseaseController {
             @ApiResponse(code = 400, message = "Request body is not correct")
     })
     @ResponseStatus(code = HttpStatus.CREATED)
-    @Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
-    public void addDisease(@RequestBody @Valid DiseaseDetails diseaseDetails){
-        diseaseService.addDisease(diseaseDetails);
+    //@Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
+    public Mono<Void> addDisease(@RequestBody @Valid DiseaseDetails diseaseDetails){
+        return diseaseService.addDisease(diseaseDetails);
     }
 
     @PutMapping("/diseases/{diseaseId}")
@@ -66,12 +70,14 @@ public class DiseaseController {
             @ApiResponse(code = 404, message = "Not found")
     })
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    @Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
-    public void updateDisease(
-            @PathVariable long diseaseId,
+    //@Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
+    public Mono<ResponseEntity<Void>> updateDisease(
+            @PathVariable @ObjectIdValid String diseaseId,
             @RequestBody @Valid DiseaseUpdate diseaseUpdate
     ){
-        diseaseService.updateDisease(diseaseId, diseaseUpdate);
+        return diseaseService.updateDisease(diseaseId, diseaseUpdate)
+                .map(d -> new ResponseEntity<Void>(HttpStatus.OK))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/disease/{diseaseId}")
@@ -81,10 +87,12 @@ public class DiseaseController {
             @ApiResponse(code = 404, message = "Not found")
     })
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    @Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
+    //@Secured({"ROLE_ADMIN", "ROLE_DOCTOR"})
     public void deleteDisease(
-            @PathVariable long diseaseId
+            @PathVariable @ObjectIdValid String diseaseId
     ){
-        diseaseService.deleteDisease(diseaseId);
+        diseaseService.deleteDisease(diseaseId)
+                .map(d -> new ResponseEntity<Void>(HttpStatus.OK))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }
