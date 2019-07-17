@@ -1,11 +1,12 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.doctor;
 
-import org.springframework.data.repository.CrudRepository;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
 
 @Repository
-public interface DoctorRepository extends CrudRepository<Doctor, Long> {
-    List<Doctor> findAll();
+public interface DoctorRepository extends ReactiveMongoRepository<Doctor, ObjectId> {
+    Flux<Doctor> findAll();
 }

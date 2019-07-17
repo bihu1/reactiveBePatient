@@ -1,23 +1,24 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.doctor;
 
-import com.dryPepperoniStickTeam.bePatient.common.mail.MailService;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorUpdate;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorView;
-import com.dryPepperoniStickTeam.bePatient.domain.profession.Profession;
-import com.dryPepperoniStickTeam.bePatient.domain.profession.ProfessionRepository;
-import com.dryPepperoniStickTeam.bePatient.domain.service.MedicalService;
-import com.dryPepperoniStickTeam.bePatient.domain.service.MedicalServiceRepository;
-import com.dryPepperoniStickTeam.bePatient.domain.user.RoleRepository;
+import com.bihuniak.piotr.reactiveBePatient.common.mail.MailService;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorUpdate;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorView;
+import com.bihuniak.piotr.reactiveBePatient.domain.profession.ProfessionRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.service.MedicalServiceRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.RoleRepository;
 import lombok.AllArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static java.util.Collections.singletonList;
 
@@ -25,6 +26,7 @@ import static java.util.Collections.singletonList;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class DoctorService {
 
+    private static final String REGISTRATION_SUBJECT = "Rejestracja w bePatient";
     private final DoctorRepository doctorRepository;
     private final RoleRepository roleRepository;
     private final MedicalServiceRepository medicalServiceRepository;
@@ -32,71 +34,94 @@ public class DoctorService {
     private final MailService mailService;
     private final MapperFacade mapper;
 
-    public List<DoctorView> getAllDoctors(){
-        List<Doctor> doctors = doctorRepository.findAll();
-        return mapper.mapAsList(doctors, DoctorView.class);
+    public Flux<DoctorView> getAllDoctors(){
+        return doctorRepository.findAll()
+                .map(d -> mapper.map(d, DoctorView.class));
     }
 
-    public DoctorView getDoctor(long id){
-        Doctor doctor = doctorRepository.findById(id).orElseThrow(RuntimeException::new);
-        return mapper.map(doctor, DoctorView.class);
+    public Mono<DoctorView> getDoctor(String id){
+        return doctorRepository.findById(new ObjectId(id))
+                .map(d -> mapper.map(d, DoctorView.class));
     }
 
-    public void addDoctor(DoctorDetails doctorDetails){
-        Doctor doctor = mapper.map(doctorDetails, Doctor.class);
-
-        List<Profession> professions = professionRepository.findByIdIn(doctorDetails.getProfessions());
-        checkIfIndexesWerePulled(professions, doctorDetails.getProfessions())
-                .ifPresent(x -> x.accept("One of profession index is incorrect"));
-
-        List<MedicalService> medicalServices = medicalServiceRepository.findByIdIn(doctorDetails.getServices());
-        checkIfIndexesWerePulled(medicalServices, doctorDetails.getServices())
-                .ifPresent(x -> x.accept("One of medical service index is incorrect"));
-
-        doctor.setMedicalServices(medicalServices);
-        doctor.setProfessions(professions);
-        doctor.setUsername(UUID.randomUUID().toString());
+    public Mono<Void> addDoctor(DoctorDetails doctorDetails){
         String doctorPassword = UUID.randomUUID().toString();
-        doctor.setPassword(doctorPassword);
-        doctor.setRoles(singletonList(roleRepository.findByRole("ROLE_DOCTOR")));
-        doctorRepository.save(doctor);
-        mailService.sendSimpleMessage(doctor.getEmail(),"Rejestracja w bePatient",
-                "Gratulujemy utworzono Ci konto w aplikacji bePatient Twój: \n login: "+doctor.getUsername()+" \n hasło:"+doctorPassword+"\nLogin i hasło należy zmienić po pierwszym logowaniu. \n bePatient Admin");
+        return Mono.just(doctorDetails)
+                .map(o -> mapper.map(o, Doctor.class))
+                .filterWhen(o -> setAndCheckProfessions(o, doctorDetails.getProfessions()))
+                .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z proffesion")))
+                .filterWhen(o -> setAndCheckMedicalServices(o, doctorDetails.getServices()))
+                .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z medical")))
+                .doOnNext(d -> d.setUsername(UUID.randomUUID().toString()))
+                .doOnNext(d -> d.setPassword(doctorPassword))
+                .doOnNext(d -> d.setRoles(singletonList(roleRepository.findByRole("ROLE_DOCTOR"))))
+                .flatMap(doctorRepository::save)
+                .doOnNext(d -> mailService.sendSimpleMessage(
+                        d.getEmail(),
+                        REGISTRATION_SUBJECT,
+                        generateMessageContent(d.getUsername(), doctorPassword))
+                )
+                .then();
     }
 
-    public void updateDoctor(long doctorId, DoctorUpdate doctorUpdate) {
-        if(!doctorRepository.existsById(doctorId)){
-            throw new RuntimeException();
-        }
-        Doctor doctor = mapper.map(doctorUpdate, Doctor.class);
-
-        List<MedicalService> medicalServices = medicalServiceRepository.findByIdIn(doctorUpdate.getServices());
-        checkIfIndexesWerePulled(medicalServices, doctorUpdate.getServices())
-                .ifPresent(x -> x.accept("One of medical service index is incorrect"));
-
-        List<Profession> professions = professionRepository.findByIdIn(doctorUpdate.getProfessions());
-        checkIfIndexesWerePulled(professions, doctorUpdate.getServices())
-                .ifPresent(x -> x.accept("One of profession index is incorrect"));
-
-        doctor.setMedicalServices(medicalServices);
-        doctor.setProfessions(professions);
-        doctorRepository.save(doctor);
+    public Mono<Void> updateDoctor(String doctorId, DoctorUpdate doctorUpdate) {
+            return doctorRepository.findById(new ObjectId(doctorId))
+                .doOnNext(o -> mapper.map(doctorUpdate, o))
+                .switchIfEmpty(Mono.error(new RuntimeException("Not exist")))
+                .filterWhen(o -> setAndCheckProfessions(o, doctorUpdate.getProfessions()))
+                .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z proffesion")))
+                .filterWhen(o -> setAndCheckMedicalServices(o, doctorUpdate.getServices()))
+                .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z medical")))
+                .flatMap(doctorRepository::save)
+                .then();
     }
 
-    public void deleteDoctor(long doctorId){
-        if(!doctorRepository.existsById(doctorId)){
-            throw new RuntimeException();
-        }
-        doctorRepository.deleteById(doctorId);
+    public Mono<Void> deleteDoctor(String doctorId){
+        return Mono.just(new ObjectId(doctorId))
+                .flatMap(id -> Mono.just(id)
+                        .filterWhen(doctorRepository::existsById)
+                        .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z medical")))
+                )
+                .flatMap(doctorRepository::deleteById);
     }
 
-    private static<T,V> Optional<Consumer<String>> checkIfIndexesWerePulled(List<T> list1, List<V> list2){
-        if(list1 == null || list2 == null){
-            return Optional.empty();
-        }
-        if(list1.size() != list2.size()){
-           return Optional.of(i -> {throw new RuntimeException(i);});
-        }
-        return Optional.empty();
+    private Mono<Boolean> setAndCheckProfessions(Doctor o, List<String> professions) {
+        return setAndCheckFlux(professionRepository.findByIdIn(professions),
+                o::setProfessions,
+                x -> o.getProfessions().size() > x
+        );
+    }
+
+    private Mono<Boolean> setAndCheckMedicalServices(Doctor o, List<String> services) {
+        return setAndCheckFlux(medicalServiceRepository.findByIdIn(services),
+                o::setMedicalServices,
+                x -> o.getMedicalServices().size() > x
+        );
+    }
+
+    private String generateMessageContent(String login, String password){
+        return new StringBuilder()
+                .append("Gratulujemy utworzono Ci konto w aplikacji bePatient Twój:")
+                .append(System.lineSeparator())
+                .append("login:")
+                .append(login)
+                .append(System.lineSeparator())
+                .append("hasło")
+                .append(password)
+                .append(System.lineSeparator())
+                .append("Login i hasło należy zmienić po pierwszym logowaniu.")
+                .append(System.lineSeparator())
+                .append("bePatient Admin")
+                .toString();
+    }
+
+    private static <V> Mono<Boolean> setAndCheckFlux(Flux<V> flux, Consumer<List<V>> setter, Predicate<Long> predicate){
+        return flux
+                .collectList()
+                .doOnNext(setter)
+                .flatMapIterable(x -> x)
+                .count()
+                .filter(predicate)
+                .map(x -> true);
     }
 }

@@ -7,6 +7,7 @@ import com.bihuniak.piotr.reactiveBePatient.domain.user.model.UserRole;
 import com.bihuniak.piotr.reactiveBePatient.domain.visit.Visit;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -34,7 +35,7 @@ public class Doctor extends User {
     @DBRef
     List<MedicalService> medicalServices;
 
-    public Doctor(long id, String username, String password, List<UserRole> roles, String firstName, String lastName, String title, String email, List<Profession> professions, List<Visit> visits, List<MedicalService> medicalServices) {
+    public Doctor(ObjectId id, String username, String password, List<UserRole> roles, String firstName, String lastName, String title, String email, List<Profession> professions, List<Visit> visits, List<MedicalService> medicalServices) {
         super(id, username, password, roles);
         this.firstName = firstName;
         this.lastName = lastName;

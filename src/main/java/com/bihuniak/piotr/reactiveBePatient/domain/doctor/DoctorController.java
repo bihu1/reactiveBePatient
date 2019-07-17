@@ -1,8 +1,8 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.doctor;
 
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorUpdate;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorView;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorUpdate;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorView;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -10,10 +10,10 @@ import io.swagger.annotations.Authorization;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors")
@@ -28,7 +28,7 @@ public class DoctorController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public List<DoctorView> getAllDoctors() {
+    public Flux<DoctorView> getAllDoctors() {
         return doctorService.getAllDoctors();
     }
 
@@ -39,7 +39,7 @@ public class DoctorController {
             @ApiResponse(code = 404, message = "Doctor not found"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public DoctorView getAllDoctors(@PathVariable long doctorId) {
+    public Mono<DoctorView> getAllDoctors(@PathVariable String doctorId) {
         return doctorService.getDoctor(doctorId);
     }
 
@@ -49,9 +49,9 @@ public class DoctorController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    @Secured("ROLE_ADMIN")
-    public void addDoctor(@RequestBody DoctorDetails doctorDetails) {
-        doctorService.addDoctor(doctorDetails);
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> addDoctor(@RequestBody DoctorDetails doctorDetails) {
+        return doctorService.addDoctor(doctorDetails);
     }
 
     @PutMapping("/{doctorId}")
@@ -61,9 +61,9 @@ public class DoctorController {
             @ApiResponse(code = 404, message = "Doctor not found"),
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Secured("ROLE_ADMIN")
-    public void updateDoctor(@PathVariable long doctorId, @RequestBody DoctorUpdate doctorUpdate) {
-        doctorService.updateDoctor(doctorId, doctorUpdate);
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> updateDoctor(@PathVariable String doctorId, @RequestBody DoctorUpdate doctorUpdate) {
+        return doctorService.updateDoctor(doctorId, doctorUpdate);
     }
 
     @DeleteMapping("/{doctorId}")
@@ -73,8 +73,8 @@ public class DoctorController {
             @ApiResponse(code = 404, message = "Doctor not found"),
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Secured("ROLE_ADMIN")
-    public void deleteDoctor(@PathVariable long doctorId) {
-        doctorService.deleteDoctor(doctorId);
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> deleteDoctor(@PathVariable String doctorId) {
+        return doctorService.deleteDoctor(doctorId);
     }
 }

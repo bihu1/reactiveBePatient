@@ -17,6 +17,6 @@ public class DoctorDetails {
     String lastName;
     String title;
     String email;
-    List<Long> professions;
-    List<Long> services;
+    List<String> professions;
+    List<String> services;
 }
