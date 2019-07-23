@@ -1,9 +1,8 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.user;
 
-import com.dryPepperoniStickTeam.bePatient.config.security.SecurityUserDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.user.http.model.ChangePasswordRequest;
-import com.dryPepperoniStickTeam.bePatient.domain.user.http.model.ChangeUsernameRequest;
-import com.dryPepperoniStickTeam.bePatient.domain.user.http.model.UserView;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.http.model.ChangePasswordRequest;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.http.model.ChangeUsernameRequest;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.http.model.UserView;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -11,7 +10,6 @@ import io.swagger.annotations.Authorization;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -33,7 +31,7 @@ public class UserController {
     })
     @ResponseStatus(HttpStatus.OK)
     public void changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordRequest) {
-        userService.changePassword(changePasswordRequest);
+        //userService.changePassword(changePasswordRequest);
     }
 
     @PutMapping("/username/changing")
@@ -44,7 +42,7 @@ public class UserController {
     })
     @ResponseStatus(HttpStatus.OK)
     public void changeUsername(@RequestBody @Valid ChangeUsernameRequest changeUsernameRequest) {
-        userService.changeUsername(changeUsernameRequest);
+        //userService.changeUsername(changeUsernameRequest);
     }
 
     @GetMapping("/me")
@@ -53,7 +51,7 @@ public class UserController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public UserView currentUser(@ApiIgnore @AuthenticationPrincipal SecurityUserDetails userDetails){
-        return userService.getMe(userDetails);
+    public void/*UserView*/ currentUser(/*@ApiIgnore @AuthenticationPrincipal SecurityUserDetails userDetails*/){
+        //return userService.getMe(userDetails);
     }
 }

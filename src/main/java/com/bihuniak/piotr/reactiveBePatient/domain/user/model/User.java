@@ -27,11 +27,11 @@ public abstract class User {
     public User(ObjectId id, String username, String password, List<UserRole> roles) {
         this.id = id;
         this.username = username;
-        this.password = new BCryptPasswordEncoder().encode(password);
+        this.password = password;//= new BCryptPasswordEncoder().encode(password);
         this.roles = roles;
     }
 
-    public void setPassword(String password){
-       this.password = new BCryptPasswordEncoder().encode(password);
-    }
+//    public void setPassword(String password){
+//       this.password = new BCryptPasswordEncoder().encode(password);
+//    }
 }
