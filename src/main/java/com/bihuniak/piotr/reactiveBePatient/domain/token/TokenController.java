@@ -22,9 +22,9 @@ public class TokenController {
     @SneakyThrows
     public void postAccessToken(
             @RequestParam String username,
-            @RequestParam String password,
-            HttpServletResponse response
+            @RequestParam String password//,
+            //HttpServletResponse response
      ){
-        response.sendRedirect("oauth/token?username="+username+"&password="+password+"&grant_type=password");
+        //response.sendRedirect("oauth/token?username="+username+"&password="+password+"&grant_type=password");
     }
 }

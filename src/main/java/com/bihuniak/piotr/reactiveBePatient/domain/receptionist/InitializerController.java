@@ -76,21 +76,21 @@ public class InitializerController {
 
         diseaseRepository.saveAll(asList(disease, disease1, disease2, disease3, disease4));
 
-        Patient patient = new Patient(new ObjectId(), "90011241122", "alaMakota1", singletonList(roleRepository.findByRole("ROLE_PATIENT")), "andrzej@gmail.com", null, "Jan", "Kozak", "123456789");
-        Patient patient1 = new Patient(new ObjectId(), "91011241122", "alaMakota2", singletonList(roleRepository.findByRole("ROLE_PATIENT")), "andrzej@gmail.com", null, "Andrzej", "Lumpacz", "123456789");
-        Patient patient2 = new Patient(new ObjectId(), "92011241122", "alaMakota3", singletonList(roleRepository.findByRole("ROLE_PATIENT")), "andrzej@gmail.com", null, "Beata", "Rozstowska", "123456789");
-        Patient patient3 = new Patient(new ObjectId(), "93011241122", "alaMakota4", singletonList(roleRepository.findByRole("ROLE_PATIENT")), "andrzej@gmail.com", null, "Kamil", "Kominiok", "123456789");
-        Patient patient4 = new Patient(new ObjectId(), "94011241122", "alaMakota5", singletonList(roleRepository.findByRole("ROLE_PATIENT")), "andrzej@gmail.com", null, "Sebastian", "Korzenny", "123456789");
+        Patient patient = new Patient(new ObjectId(), "90011241122", "alaMakota1", singletonList(roleRepository.findByRole("ROLE_PATIENT").block()), "andrzej@gmail.com", null, "Jan", "Kozak", "123456789");
+        Patient patient1 = new Patient(new ObjectId(), "91011241122", "alaMakota2", singletonList(roleRepository.findByRole("ROLE_PATIENT").block()), "andrzej@gmail.com", null, "Andrzej", "Lumpacz", "123456789");
+        Patient patient2 = new Patient(new ObjectId(), "92011241122", "alaMakota3", singletonList(roleRepository.findByRole("ROLE_PATIENT").block()), "andrzej@gmail.com", null, "Beata", "Rozstowska", "123456789");
+        Patient patient3 = new Patient(new ObjectId(), "93011241122", "alaMakota4", singletonList(roleRepository.findByRole("ROLE_PATIENT").block()), "andrzej@gmail.com", null, "Kamil", "Kominiok", "123456789");
+        Patient patient4 = new Patient(new ObjectId(), "94011241122", "alaMakota5", singletonList(roleRepository.findByRole("ROLE_PATIENT").block()), "andrzej@gmail.com", null, "Sebastian", "Korzenny", "123456789");
 
-        Doctor doctor = new Doctor(new ObjectId(), "doctorHouse", "kotMaAle", singletonList(roleRepository.findByRole("ROLE_DOCTOR")),
+        Doctor doctor = new Doctor(new ObjectId(), "doctorHouse", "kotMaAle", singletonList(roleRepository.findByRole("ROLE_DOCTOR").block()),
                 "Aleksander", "Ziółko", "dr n. md.", "ziolko@gmail.com" , asList(profession, profession3), null, asList(medicalService, medicalService1));
-        Doctor doctor1 = new Doctor(new ObjectId(), "missMedico", "kotMaAle1", singletonList(roleRepository.findByRole("ROLE_DOCTOR")),
+        Doctor doctor1 = new Doctor(new ObjectId(), "missMedico", "kotMaAle1", singletonList(roleRepository.findByRole("ROLE_DOCTOR").block()),
                 "Grzegorz", "Lecznicki", "dr n. md.", "grzegorz_lecznicki@gmail.com" , asList(profession, profession3), null, asList(medicalService, medicalService1));
-        Doctor doctor2 = new Doctor(new ObjectId(), "drChoroba52", "kotMaAle", singletonList(roleRepository.findByRole("ROLE_DOCTOR")),
+        Doctor doctor2 = new Doctor(new ObjectId(), "drChoroba52", "kotMaAle", singletonList(roleRepository.findByRole("ROLE_DOCTOR").block()),
                 "Robert", "Strzykawski", "d n. md.", "strzykawa@gmail.com" , asList(profession, profession3), null, asList(medicalService, medicalService1));
-        Doctor doctor3 = new Doctor(new ObjectId(), "panWyleczToSam", "kotMaAle2", singletonList(roleRepository.findByRole("ROLE_DOCTOR")),
+        Doctor doctor3 = new Doctor(new ObjectId(), "panWyleczToSam", "kotMaAle2", singletonList(roleRepository.findByRole("ROLE_DOCTOR").block()),
                 "Małgorzata", "Ampułka", "lek.", "ampula54@gmail.com" , asList(profession, profession3), null, asList(medicalService, medicalService1));
-        Doctor doctor4 = new Doctor(new ObjectId(), "lekareczka69", "kotMaAle3", singletonList(roleRepository.findByRole("ROLE_DOCTOR")),
+        Doctor doctor4 = new Doctor(new ObjectId(), "lekareczka69", "kotMaAle3", singletonList(roleRepository.findByRole("ROLE_DOCTOR").block()),
                 "Maria", "Kurczynos", "lek.", "maryska_kurczynos@gmail.com" , asList(profession, profession3), null, asList(medicalService, medicalService1));
 
         List<Doctor> doctors = asList(doctor, doctor1, doctor2, doctor3, doctor4);
