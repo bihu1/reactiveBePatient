@@ -1,5 +1,6 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.patient;
 
+import com.bihuniak.piotr.reactiveBePatient.ObjectIdValid;
 import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientDetails;
 import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientView;
 import io.swagger.annotations.ApiOperation;
@@ -39,7 +40,7 @@ public class PatientController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public Mono<PatientView> getPatient(@PathVariable String patientId){
+    public Mono<PatientView> getPatient(@PathVariable @ObjectIdValid String patientId){
         return patientService.getPatient(patientId);
     }
 

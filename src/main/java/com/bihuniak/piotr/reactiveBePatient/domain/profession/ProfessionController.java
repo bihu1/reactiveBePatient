@@ -1,8 +1,9 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.profession;
 
-import com.dryPepperoniStickTeam.bePatient.domain.profession.http.model.ProfessionDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.profession.http.model.ProfessionUpdate;
-import com.dryPepperoniStickTeam.bePatient.domain.profession.http.model.ProfessionView;
+import com.bihuniak.piotr.reactiveBePatient.ObjectIdValid;
+import com.bihuniak.piotr.reactiveBePatient.domain.profession.http.model.ProfessionDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.profession.http.model.ProfessionUpdate;
+import com.bihuniak.piotr.reactiveBePatient.domain.profession.http.model.ProfessionView;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -10,11 +11,11 @@ import io.swagger.annotations.Authorization;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -30,8 +31,8 @@ public class ProfessionController {
             @ApiResponse(code = 404, message = "Profession not found")
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public ProfessionView getProfession(
-            @PathVariable long professionId
+    public Mono<ProfessionView> getProfession(
+            @PathVariable @ObjectIdValid String professionId
     ){
        return professionService.getProfession(professionId);
     }
@@ -42,7 +43,7 @@ public class ProfessionController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public List<ProfessionView> getProfession(){
+    public Flux<ProfessionView> getProfession(){
         return professionService.getAllProfessions();
     }
 
@@ -53,9 +54,9 @@ public class ProfessionController {
             @ApiResponse(code = 400, message = "Request body is not correct")
     })
     @ResponseStatus(code = HttpStatus.CREATED)
-    @Secured("ROLE_ADMIN")
-    public void addProfession(@RequestBody @Valid ProfessionDetails professionDetails){
-        professionService.addProfession(professionDetails);
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> addProfession(@RequestBody @Valid ProfessionDetails professionDetails){
+        return professionService.addProfession(professionDetails);
     }
 
     @PutMapping("/professions/{professionId}")
@@ -66,12 +67,12 @@ public class ProfessionController {
             @ApiResponse(code = 404, message = "Not found")
     })
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    @Secured("ROLE_ADMIN")
-    public void updateProfession(
-            @PathVariable long professionId,
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> updateProfession(
+            @PathVariable @ObjectIdValid String professionId,
             @RequestBody @Valid ProfessionUpdate professionUpdate
     ){
-        professionService.updateProfession(professionId, professionUpdate);
+        return professionService.updateProfession(professionId, professionUpdate);
     }
 
     @DeleteMapping("/professions/{professionId}")
@@ -81,10 +82,10 @@ public class ProfessionController {
             @ApiResponse(code = 404, message = "Not found")
     })
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    @Secured("ROLE_ADMIN")
-    public void deleteProfession(
-            @PathVariable long professionId
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> deleteProfession(
+            @PathVariable @ObjectIdValid String professionId
     ){
-        professionService.deleteProfession(professionId);
+        return professionService.deleteProfession(professionId);
     }
 }
