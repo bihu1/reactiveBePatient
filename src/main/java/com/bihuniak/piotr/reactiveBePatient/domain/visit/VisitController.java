@@ -1,8 +1,7 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.visit;
 
-import com.dryPepperoniStickTeam.bePatient.common.IdHolder;
-import com.dryPepperoniStickTeam.bePatient.domain.visit.http.model.*;
-import com.itextpdf.text.pdf.BaseFont;
+import com.bihuniak.piotr.reactiveBePatient.common.IdHolder;
+import com.bihuniak.piotr.reactiveBePatient.domain.visit.http.model.*;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -15,18 +14,19 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.xhtmlrenderer.pdf.ITextRenderer;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
+@Validated
 @RestController
 @RequestMapping("/api")
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -40,8 +40,8 @@ public class VisitController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public List<VisitView> getAllDoctorsVisitsByStatus(
-            @PathVariable long doctorId,
+    public Flux<VisitView> getAllDoctorsVisitsByStatus(
+            @PathVariable @Validated String doctorId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Optional<LocalDate> date,
             @RequestParam FilterVisitStatus patternVisitStatus
     ){
@@ -54,7 +54,7 @@ public class VisitController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public List<VisitView> getAllVisits(){
+    public Flux<VisitView> getAllVisits(){
         return visitService.getAllVisits();
     }
 
@@ -66,9 +66,9 @@ public class VisitController {
             @ApiResponse(code = 404, message = "Doctor not found"),
     })
     @ResponseStatus(HttpStatus.OK)
-    @Secured("ROLE_ADMIN")
-    public void addDoctorAvailableVisit(@PathVariable long doctorId, @RequestBody VisitDetails visitDetails){
-        visitService.addDoctorAvailableVisit(doctorId, visitDetails);
+    //@Secured("ROLE_ADMIN")
+    public Mono<Void> addDoctorAvailableVisit(@PathVariable long doctorId, @RequestBody VisitDetails visitDetails){
+        return visitService.addDoctorAvailableVisit(doctorId, visitDetails);
     }
 
     @PostMapping("/doctors/{doctorId}/visits/{visitId}")
@@ -77,13 +77,13 @@ public class VisitController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    @Secured("ROLE_PATIENT")
-    public void reserveVisitByPanelist(
-            @PathVariable long doctorId,
-            @PathVariable long visitId,
+    //@Secured("ROLE_PATIENT")
+    public Mono<Void> reserveVisitByPanelist(
+            @PathVariable String doctorId,
+            @PathVariable String visitId,
             @RequestBody IdHolder patientIdHolder
     ){
-        visitService.reserveVisitByPatient(doctorId, visitId, patientIdHolder.getId());
+        return visitService.reserveVisitByPatient(doctorId, visitId, patientIdHolder.getId());
     }
 
     @GetMapping("/patients/{patientId}/visits")
@@ -92,7 +92,7 @@ public class VisitController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public List<ReservedVisitView> getPatientsVisits(@PathVariable long patientId){
+    public Flux<ReservedVisitView> getPatientsVisits(@PathVariable long patientId){
         return visitService.getAllPatientsVisits(patientId);
     }
 
@@ -104,9 +104,9 @@ public class VisitController {
             @ApiResponse(code = 404, message = "Not found"),
     })
     @ResponseStatus(HttpStatus.OK)
-    @Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public void assignDiseaseAndServicesToVisit(@PathVariable long visitId, @RequestBody PatientVisitCard patientVisitCard){
-         visitService.assignDiseaseAndMedicalServices(visitId, patientVisitCard);
+    //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
+    public Mono<Void> assignDiseaseAndServicesToVisit(@PathVariable long visitId, @RequestBody PatientVisitCard patientVisitCard){
+        return visitService.assignDiseaseAndMedicalServices(visitId, patientVisitCard);
     }
 
     @PutMapping("/visits/{visitId}")
@@ -117,9 +117,9 @@ public class VisitController {
             @ApiResponse(code = 404, message = "Not found"),
     })
     @ResponseStatus(HttpStatus.OK)
-    @Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public void changeVisitStatus(@PathVariable long visitId, @RequestParam VisitStatus status){
-        visitService.changeVisitStatus(visitId, status);
+    //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
+    public Mono<Void> changeVisitStatus(@PathVariable String visitId, @RequestParam VisitStatus status){
+        return visitService.changeVisitStatus(visitId, status);
     }
 
     @GetMapping("/visits/{visitId}/pdf/generation")
@@ -129,15 +129,15 @@ public class VisitController {
     })
     @ResponseStatus(code = HttpStatus.CREATED)
     @SneakyThrows
-    @Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public ResponseEntity generatePdf(@PathVariable long visitId){
+    //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
+    public ResponseEntity generatePdf(@PathVariable String visitId){
         String html = visitService.generateHTMLView(visitId);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ITextRenderer renderer = new ITextRenderer();
-        renderer.getFontResolver().addFont("fonts/ARIALUNI.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-        renderer.setDocumentFromString(html);
-        renderer.layout();
-        renderer.createPDF(outputStream);
+//        ITextRenderer renderer = new ITextRenderer();
+//        renderer.getFontResolver().addFont("fonts/ARIALUNI.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+//        renderer.setDocumentFromString(html);
+//        renderer.layout();
+//        renderer.createPDF(outputStream);
         InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
 
         return ResponseEntity

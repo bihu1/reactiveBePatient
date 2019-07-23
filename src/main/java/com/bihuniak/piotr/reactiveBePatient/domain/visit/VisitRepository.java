@@ -1,18 +1,18 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.visit;
 
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.Doctor;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.model.Patient;
-import org.springframework.data.repository.CrudRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.Doctor;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.model.Patient;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
-public interface VisitRepository extends CrudRepository<Visit, Long> {
-    List<Visit> findByDoctorAndPatient(Doctor doctor, Patient patient);
-    List<Visit> findByPatient(Patient patient);
-    List<Visit> findByDoctor(Doctor doctor);
-    List<Visit> findAll();
-    Optional<Visit> findByIdAndDoctor(long id, Doctor doctor);
+public interface VisitRepository extends ReactiveMongoRepository<Visit, ObjectId> {
+    Flux<Visit> findByDoctorAndPatient(Doctor doctor, Patient patient);
+    Flux<Visit> findByPatient(Patient patient);
+    Flux<Visit> findByDoctor(Doctor doctor);
+    Flux<Visit> findAll();
+    Mono<Visit> findByIdAndDoctor(ObjectId id, Doctor doctor);
 }
