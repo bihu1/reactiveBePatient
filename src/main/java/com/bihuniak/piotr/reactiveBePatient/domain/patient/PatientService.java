@@ -1,16 +1,17 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.patient;
 
-import com.dryPepperoniStickTeam.bePatient.common.mail.MailService;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.http.model.PatientDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.http.model.PatientView;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.model.Patient;
-import com.dryPepperoniStickTeam.bePatient.domain.user.RoleRepository;
+import com.bihuniak.piotr.reactiveBePatient.common.mail.MailService;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientView;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.model.Patient;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.RoleRepository;
 import lombok.AllArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import static java.util.Collections.singletonList;
 
@@ -23,30 +24,33 @@ public class PatientService {
     private final MailService mailService;
     private final MapperFacade mapper;
 
-    public List<PatientView> getAllPatients(){
-        List<Patient> patients = patientRepository.findAll();
-        return mapper.mapAsList(patients, PatientView.class);
+    public Flux<PatientView> getAllPatients(){
+        return patientRepository.findAll()
+                .map(p -> mapper.map(p, PatientView.class));
     }
 
-    public PatientView getPatient(long patientId){
-        Patient patient = patientRepository.findById(patientId).orElseThrow(RuntimeException::new);
-        return mapper.map(patient, PatientView.class);
+    public Mono<PatientView> getPatient(String patientId){
+        return patientRepository.findById(new ObjectId(patientId))
+                .map(p -> mapper.map(p, PatientView.class))
+                .switchIfEmpty(Mono.error(RuntimeException::new));
     }
 
-    public void register(PatientDetails patientDetails){
-        Patient patient = mapper.map(patientDetails, Patient.class);
-        patient.setRoles(singletonList(roleRepository.findByRole("ROLE_PATIENT")));
-        if(patientRepository.existsByUsername(patient.getUsername())){
-            throw new RuntimeException();
-        }
-        patientRepository.save(patient);
-        if(patient.getEmail() != null){
-            mailService.sendSimpleMessage(patient.getEmail(),"Rejestracja w bePatient",
-                    "Gratulujemy udało Ci się pomyślnie zarejestrować, teraz możesz w pełni korzystać z naszego systemu \n bePatient Admin");
-        }
+    public Mono<Void> register(PatientDetails patientDetails){
+        return Mono.just(mapper.map(patientDetails, Patient.class))
+                .doOnNext(p -> p.setRoles(singletonList(roleRepository.findByRole("ROLE_PATIENT"))))
+                .flatMap(p -> Mono.just(p)
+                                .filterWhen(x -> patientRepository.existsByUsername(x.getUsername()))
+                                .switchIfEmpty(Mono.error(RuntimeException::new))
+                )
+                .flatMap(patientRepository::save)
+                .doOnNext(p -> mailService.sendSimpleMessage(p.getEmail(),"Rejestracja w bePatient",
+                        "Gratulujemy udało Ci się pomyślnie zarejestrować, teraz możesz w pełni korzystać z naszego systemu \n bePatient Admin")
+                )
+                .then();
     }
 
-    public void sendMailToReception(String patientId, String message){
+    public Mono<Void> sendMailToReception(String patientId, String message){
         mailService.sendSimpleMessage("bepatientclinic@gmail.com","Wiadomość od użytkownika","Uzytkownik"+patientId+" przesyla wiadomosc"+message);
+        return Mono.empty();
     }
 }

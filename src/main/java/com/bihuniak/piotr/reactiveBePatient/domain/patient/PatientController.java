@@ -1,8 +1,7 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.patient;
 
-import com.dryPepperoniStickTeam.bePatient.config.security.SecurityUserDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.http.model.PatientDetails;
-import com.dryPepperoniStickTeam.bePatient.domain.patient.http.model.PatientView;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientDetails;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.http.model.PatientView;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -10,13 +9,12 @@ import io.swagger.annotations.Authorization;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -30,8 +28,8 @@ public class PatientController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(code = HttpStatus.OK)
-    @Secured("ROLE_ADMIN")
-    public List<PatientView> getAllPatients(){
+    //@Secured("ROLE_ADMIN")
+    public Flux<PatientView> getAllPatients(){
         return patientService.getAllPatients();
     }
 
@@ -41,7 +39,7 @@ public class PatientController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(code = HttpStatus.OK)
-    public PatientView getPatient(@PathVariable long patientId){
+    public Mono<PatientView> getPatient(@PathVariable String patientId){
         return patientService.getPatient(patientId);
     }
 
@@ -52,8 +50,8 @@ public class PatientController {
             @ApiResponse(code = 400, message = "Request body is not correct")
     })
     @ResponseStatus(code = HttpStatus.CREATED)
-    public void register(@RequestBody @Valid PatientDetails patientDetails){
-        patientService.register(patientDetails);
+    public Mono<Void> register(@RequestBody @Valid PatientDetails patientDetails){
+        return patientService.register(patientDetails);
     }
 
     @PostMapping("api/patient/message")
@@ -63,8 +61,9 @@ public class PatientController {
             @ApiResponse(code = 400, message = "Request body is not correct")
     })
     @ResponseStatus(code = HttpStatus.CREATED)
-    @Secured("ROLE_PATIENT")
-    public void sendMailToReception(@ApiIgnore @AuthenticationPrincipal SecurityUserDetails userDetails, @RequestBody String message){
-        patientService.sendMailToReception(String.valueOf(userDetails.getId()), message);
+    //@Secured("ROLE_PATIENT")
+    public Mono<Void> sendMailToReception(/*@ApiIgnore @AuthenticationPrincipal SecurityUserDetails userDetails, */@RequestBody String message){
+        //patientService.sendMailToReception(String.valueOf(userDetails.getId()), message);
+        return Mono.empty();
     }
 }

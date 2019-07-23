@@ -1,14 +1,13 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.patient;
 
-import com.dryPepperoniStickTeam.bePatient.domain.patient.model.Patient;
-import org.springframework.data.repository.CrudRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.model.Patient;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Mono;
 
 @Repository
-public interface PatientRepository extends CrudRepository<Patient, Long> {
+public interface PatientRepository extends ReactiveMongoRepository<Patient, ObjectId> {
 
-    boolean existsByUsername(String username);
-    List<Patient> findAll();
+    Mono<Boolean> existsByUsername(String username);
 }
