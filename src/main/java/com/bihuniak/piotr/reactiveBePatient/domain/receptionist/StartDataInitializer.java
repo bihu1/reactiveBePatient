@@ -1,24 +1,24 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.receptionist;
 
-import com.dryPepperoniStickTeam.bePatient.domain.disease.Disease;
-import com.dryPepperoniStickTeam.bePatient.domain.disease.DiseaseRepository;
-import com.dryPepperoniStickTeam.bePatient.domain.user.RoleRepository;
-import com.dryPepperoniStickTeam.bePatient.domain.user.UserRepository;
-import com.dryPepperoniStickTeam.bePatient.domain.user.model.UserRole;
+import com.bihuniak.piotr.reactiveBePatient.domain.disease.Disease;
+import com.bihuniak.piotr.reactiveBePatient.domain.disease.DiseaseRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.RoleRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.UserRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.model.UserRole;
 import com.opencsv.bean.CsvToBeanBuilder;
-import lombok.SneakyThrows;
+import org.bson.types.ObjectId;
+import org.jooq.lambda.Unchecked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 @Component
@@ -34,48 +34,44 @@ public class StartDataInitializer {
     DiseaseRepository diseaseRepository;
 
     private void roleInitializer(){
-        if(roleRepository.findAll().size() == 0){
-            roleRepository.saveAll(asList(
-                    new UserRole(0, "ROLE_ADMIN"),
-                    new UserRole(0, "ROLE_DOCTOR"),
-                    new UserRole(0, "ROLE_PATIENT"))
-            );
-        }
+        roleRepository.findAll()
+                .count()
+                .filter(x -> x == 0)
+                .flatMapMany(x -> Flux.just(
+                        new UserRole(0, "ROLE_ADMIN"),
+                        new UserRole(0, "ROLE_DOCTOR"),
+                        new UserRole(0, "ROLE_PATIENT"))
+                )
+                .flatMap(roleRepository::save);
     }
 
-    @SneakyThrows
     @SuppressWarnings(value = "unchecked")
     private void diseaseInitializer(){
-        if(diseaseRepository.findAll().size() == 0){
-//            File file = new File(ofNullable(getClass()
-//                                .getClassLoader()
-//                                .getResource("fileName")
-//                            ).orElseThrow(() -> new RuntimeException("Nie ma takiego pliku śmieciu!"))
-//                        .getFile()
-//            );
-            InputStream inputStream = new ClassPathResource("./ICD_10.csv").getInputStream();
-            Reader reader = new InputStreamReader(inputStream , StandardCharsets.UTF_8);
-            List<Disease> diseases = new CsvToBeanBuilder(reader)
-                    .withType(Disease.class)
-                    .withIgnoreLeadingWhiteSpace(true)
-                    .build()
-                    .parse();
-            diseaseRepository.saveAll(diseases);
-        }
+         diseaseRepository.findAll().count()
+                .filter(x -> x == 0)
+                .map(x -> new ClassPathResource("./ICD_10.csv"))
+                .map(Unchecked.function(ClassPathResource::getInputStream))
+                .map(x -> new InputStreamReader(x , StandardCharsets.UTF_8))
+                .flatMapMany(x -> Flux.fromIterable((List<Disease>)new CsvToBeanBuilder(x)
+                        .withType(Disease.class)
+                        .withIgnoreLeadingWhiteSpace(true)
+                        .build()
+                        .parse())
+                )
+                .flatMap(diseaseRepository::save);
     }
 
     @Bean
     public void initializeFirstReceptionist(){
         roleInitializer();
         diseaseInitializer();
-        Receptionist receptionist = new Receptionist(
-                0,
+        Mono.just( new Receptionist(
+                new ObjectId(),
                 "Basia",
                 "xvcf123",
-                singletonList(roleRepository.findByRole("ROLE_ADMIN"))
-        );
-        if(!userRepository.existsByUsername("Basia")){
-            userRepository.save(receptionist);
-        }
+                singletonList(roleRepository.findByRole("ROLE_ADMIN").block())
+        ))
+                .filterWhen(x -> userRepository.existsByUsername("Basia"))
+                .flatMap(userRepository::save);
     }
 }

@@ -26,6 +26,7 @@ dependencyManagement {
 		dependency group: 'io.springfox', name: 'springfox-swagger2', version : '2.9.2'
 		dependency group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
 		dependency group: 'com.opencsv' ,name:'opencsv' ,version: '4.0'
+		dependency group: 'org.jooq', name:'jool-java-8', version:'0.9.13'
 	}
 }
 
@@ -40,7 +41,9 @@ dependencies {
 	implementation group: 'io.springfox', name: 'springfox-swagger-ui'
 
 	implementation group: 'com.opencsv' ,name:'opencsv'
-	
+
+	implementation group: 'org.jooq', name: 'jool-java-8'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	

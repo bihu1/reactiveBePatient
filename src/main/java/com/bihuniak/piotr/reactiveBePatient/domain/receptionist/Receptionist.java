@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class Receptionist extends User {
-    public Receptionist(long id, String username, String password, List<UserRole> roles) {
+    public Receptionist(ObjectId id, String username, String password, List<UserRole> roles) {
         super(id, username, password, roles);
     }
 }

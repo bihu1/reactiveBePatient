@@ -1,11 +1,11 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.user;
 
-import com.dryPepperoniStickTeam.bePatient.domain.user.model.User;
-import org.springframework.data.repository.CrudRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.model.User;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
-public interface UserRepository extends CrudRepository<User, Long> {
-    Optional<User> findByUsername(String username);
-    boolean existsByUsername(String username);
+public interface UserRepository extends ReactiveMongoRepository<User, ObjectId> {
+    Mono<User> findByUsername(String username);
+    Mono<Boolean> existsByUsername(String username);
 }

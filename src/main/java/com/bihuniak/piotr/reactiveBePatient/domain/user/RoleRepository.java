@@ -1,13 +1,12 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.user;
 
-import com.dryPepperoniStickTeam.bePatient.domain.user.model.UserRole;
-import org.springframework.data.repository.CrudRepository;
+import com.bihuniak.piotr.reactiveBePatient.domain.user.model.UserRole;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Mono;
 
 @Repository
-public interface RoleRepository extends CrudRepository<UserRole, Long> {
-    List<UserRole> findAll();
-    UserRole findByRole(String role);
+public interface RoleRepository extends ReactiveMongoRepository<UserRole, ObjectId> {
+    Mono<UserRole> findByRole(String role);
 }
