@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.bihuniak.piotr.reactiveBePatient.domain.visit.FilterVisitStatus.AVAILABLE;
-import static java.util.stream.Collectors.toList;
 
 @Service
 @Transactional
@@ -44,27 +43,28 @@ public class VisitService {
     //private final TemplateEngine templateEngine;
 
     public Mono<Void> addDoctorAvailableVisit(String doctorId, VisitDetails visitDetails){
-        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(RuntimeException::new);
-        Visit visit = mapper.map(visitDetails, Visit.class);
-        visit.setStatus(VisitStatus.AVAILABLE);
-        visit.setDoctor(doctor);
-        doctor.addVisit(visit);
-        visitRepository.save(visit);
+        return Mono.just(mapper.map(visitDetails, Visit.class))
+            .doOnNext(v -> v.setStatus(VisitStatus.AVAILABLE))
+            .doOnNext(v -> makeCascade2(v, doctorId))
+            .flatMap(visitRepository::save)
+            .then();
+    }
+
+    private void makeCascade2(Visit visit, String doctorId){
+        doctorRepository.findById(new ObjectId(doctorId))
+            .doOnNext(p -> p.getVisits().add(visit))
+            .doOnNext(visit::setDoctor)
+            .flatMap(doctorRepository::save);
     }
 
     public Flux<VisitView> getAllDoctorsVisitsByStatus(String doctorId, Optional<LocalDate> date, FilterVisitStatus patternVisitStatus){
-        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(RuntimeException::new);
-        List<Visit> visits = (patternVisitStatus == AVAILABLE ? visitRepository.findByDoctorAndPatient(doctor, null) : visitRepository.findByDoctor(doctor))
-                .stream()
-                .filter(v ->
-                        date.map(d -> v.getDateFrom()
-                                .toLocalDate()
-                                .equals(d)
-                        )
+        return doctorRepository.findById(new ObjectId(doctorId))
+            .flatMapMany(d -> patternVisitStatus == AVAILABLE ? visitRepository.findByDoctorAndPatient(d, null) : visitRepository.findByDoctor(d))
+            .filter(v ->
+                    date.map(t -> v.getDateFrom().toLocalDate().equals(t))
                         .orElse(true)
-                )
-                .collect(toList());
-        return mapper.mapAsList(visits, VisitView.class);
+            )
+            .map(v -> mapper.map(v, VisitView.class));
     }
 
     public Flux<VisitView> getAllVisits(){
@@ -73,38 +73,49 @@ public class VisitService {
     }
 
     public Flux<ReservedVisitView> getAllPatientsVisits(String patientId){
-        Patient patient = patientRepository.findById(patientId).orElseThrow(RuntimeException::new);
-        List<Visit> visits = visitRepository.findByPatient(patient);
-        return mapper.mapAsList(visits, ReservedVisitView.class);
+        return patientRepository.findById(new ObjectId(patientId))
+            .flatMapMany(visitRepository::findByPatient)
+            .map(v -> mapper.map(v, ReservedVisitView.class));
     }
 
     public Mono<Void> reserveVisitByPatient(String doctorId, String visitId, String patientId){
-        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(RuntimeException::new);
-        Visit visit = visitRepository.findByIdAndDoctor(visitId, doctor).orElseThrow(RuntimeException::new);
-        Patient patient = patientRepository.findById(patientId).orElseThrow(RuntimeException::new);
-        visit.setPatient(patient);
-        visit.setStatus(VisitStatus.RESERVED);
-        patient.getVisits().add(visit);
+        return doctorRepository.findById(new ObjectId(doctorId))
+            .flatMapMany(d -> visitRepository.findByIdAndDoctor(new ObjectId(visitId), d))
+            .doOnNext(v -> v.setStatus(VisitStatus.RESERVED))
+            .doOnNext(v -> makeCascade(v, patientId))
+            .flatMap(visitRepository::save)
+            .then();
+    }
+
+    private void makeCascade(Visit visit, String patientId){
+            patientRepository.findById(new ObjectId(patientId))
+                .doOnNext(p -> p.getVisits().add(visit))
+                .doOnNext(visit::setPatient)
+                .flatMap(patientRepository::save);
     }
 
     public Mono<Void> assignDiseaseAndMedicalServices(String visitId , PatientVisitCard patientVisitCard){
-        List<Disease> diseases = diseaseRepository.findByIdIn(patientVisitCard.getDiseases());
-        if(diseases.size() != patientVisitCard.getDiseases().size()){
-            throw new RuntimeException();
-        }
-        List<MedicalService> medicalServices = medicalServiceRepository.findByIdIn(patientVisitCard.getServices());
-        if(medicalServices.size() != patientVisitCard.getServices().size()){
-            throw new RuntimeException();
-        }
-
-        Visit visit = visitRepository.findById(visitId).orElseThrow(RuntimeException::new);
-        visit.setDiseases(diseases);
-        visit.setMedicalServices(medicalServices);
-        visit.setMainSymptoms(patientVisitCard.getMainSymptoms());
-        visit.setTreatment(patientVisitCard.getTreatment());
-        visit.setAllergy(patientVisitCard.getAllergy());
-        visit.setAddiction(patientVisitCard.getAddiction());
-        visit.setComment(patientVisitCard.getComment());
+        return visitRepository.findById(new ObjectId(visitId))
+            .doOnNext(v -> mapper.map(patientVisitCard, v))
+            .flatMap(v -> Mono.just(v)
+                .filterWhen(z -> diseaseRepository.findByIdIn(patientVisitCard.getDiseases())
+                    .doOnNext(d -> v.getDiseases().add(d))
+                    .count()
+                    .filter(x -> x != patientVisitCard.getDiseases().size())
+                    .hasElement()
+                )
+                .switchIfEmpty(Mono.error(new RuntimeException()))
+            )
+            .flatMap(v -> Mono.just(v)
+                .filterWhen(z -> medicalServiceRepository.findByIdIn(patientVisitCard.getServices())
+                    .doOnNext(m -> v.getMedicalServices().add(m))
+                    .count()
+                    .filter(x -> x != patientVisitCard.getDiseases().size())
+                    .hasElement()
+                )
+                .switchIfEmpty(Mono.error(new RuntimeException()))
+            ).flatMap(visitRepository::save)
+            .then();
     }
 
     public Mono<Void> changeVisitStatus(String visitId, VisitStatus status){

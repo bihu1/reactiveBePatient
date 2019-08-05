@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level= AccessLevel.PRIVATE)
 public class PatientView {
 
-    long id;
+    String id;
     String firstName;
     String lastName;
     String pesel;

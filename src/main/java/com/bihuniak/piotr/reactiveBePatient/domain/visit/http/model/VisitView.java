@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @FieldDefaults(level= AccessLevel.PRIVATE)
 public class VisitView {
 
-    long id;
-    Long patientId;
+    String id;
+    String patientId;
     LocalDateTime dateFrom;
     LocalDateTime dateTo;
     VisitStatus status;

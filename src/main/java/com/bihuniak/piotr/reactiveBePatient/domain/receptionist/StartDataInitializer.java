@@ -38,9 +38,9 @@ public class StartDataInitializer {
                 .count()
                 .filter(x -> x == 0)
                 .flatMapMany(x -> Flux.just(
-                        new UserRole(0, "ROLE_ADMIN"),
-                        new UserRole(0, "ROLE_DOCTOR"),
-                        new UserRole(0, "ROLE_PATIENT"))
+                        new UserRole(ObjectId.get(), "ROLE_ADMIN"),
+                        new UserRole(ObjectId.get(), "ROLE_DOCTOR"),
+                        new UserRole(ObjectId.get(), "ROLE_PATIENT"))
                 )
                 .flatMap(roleRepository::save);
     }

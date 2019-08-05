@@ -1,5 +1,6 @@
 package com.bihuniak.piotr.reactiveBePatient.common;
 
+import com.bihuniak.piotr.reactiveBePatient.ObjectIdValid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,5 +16,6 @@ import javax.validation.constraints.NotNull;
 public class IdHolder {
 
     @NotNull
-    Long id;
+    @ObjectIdValid
+    String id;
 }

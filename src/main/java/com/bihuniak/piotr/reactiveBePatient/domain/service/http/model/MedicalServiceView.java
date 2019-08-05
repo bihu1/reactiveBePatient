@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level= AccessLevel.PRIVATE)
 public class MedicalServiceView {
 
-    long id;
+    String id;
     String service;
     float price;
 }

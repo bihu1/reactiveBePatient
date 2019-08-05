@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level= AccessLevel.PRIVATE)
 public class ReservedVisitView {
-    long id;
+    String id;
     LocalDateTime date;
-    Long patientId;
+    String patientId;
     int cost;
     String doctorFirstName;
     String doctorLastName;

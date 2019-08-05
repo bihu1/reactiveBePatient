@@ -37,7 +37,7 @@ public class PatientService {
 
     public Mono<Void> register(PatientDetails patientDetails){
         return Mono.just(mapper.map(patientDetails, Patient.class))
-                .doOnNext(p -> p.setRoles(singletonList(roleRepository.findByRole("ROLE_PATIENT"))))
+                .doOnNext(p -> setRole(p))
                 .flatMap(p -> Mono.just(p)
                                 .filterWhen(x -> patientRepository.existsByUsername(x.getUsername()))
                                 .switchIfEmpty(Mono.error(RuntimeException::new))
@@ -47,6 +47,11 @@ public class PatientService {
                         "Gratulujemy udało Ci się pomyślnie zarejestrować, teraz możesz w pełni korzystać z naszego systemu \n bePatient Admin")
                 )
                 .then();
+    }
+
+    private void setRole(Patient patient){
+        roleRepository.findByRole("ROLE_PATIENT")
+            .doOnNext(x -> patient.getRoles().add(x));
     }
 
     public Mono<Void> sendMailToReception(String patientId, String message){

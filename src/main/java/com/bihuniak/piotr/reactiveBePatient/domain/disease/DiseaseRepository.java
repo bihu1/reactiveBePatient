@@ -11,5 +11,5 @@ import java.util.List;
 @Repository
 public interface DiseaseRepository extends ReactiveMongoRepository<Disease, ObjectId> {
     Flux<Disease> findAll();
-    Flux<Disease> findByIdIn(List<Long> idList);
+    Flux<Disease> findByIdIn(List<String> idList);
 }

@@ -1,5 +1,6 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.visit;
 
+import com.bihuniak.piotr.reactiveBePatient.ObjectIdValid;
 import com.bihuniak.piotr.reactiveBePatient.common.IdHolder;
 import com.bihuniak.piotr.reactiveBePatient.domain.visit.http.model.*;
 import io.swagger.annotations.ApiOperation;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -41,7 +43,7 @@ public class VisitController {
     })
     @ResponseStatus(HttpStatus.OK)
     public Flux<VisitView> getAllDoctorsVisitsByStatus(
-            @PathVariable @Validated String doctorId,
+            @PathVariable @ObjectIdValid String doctorId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Optional<LocalDate> date,
             @RequestParam FilterVisitStatus patternVisitStatus
     ){
@@ -67,7 +69,7 @@ public class VisitController {
     })
     @ResponseStatus(HttpStatus.OK)
     //@Secured("ROLE_ADMIN")
-    public Mono<Void> addDoctorAvailableVisit(@PathVariable long doctorId, @RequestBody VisitDetails visitDetails){
+    public Mono<Void> addDoctorAvailableVisit(@PathVariable @ObjectIdValid String doctorId, @RequestBody VisitDetails visitDetails){
         return visitService.addDoctorAvailableVisit(doctorId, visitDetails);
     }
 
@@ -79,9 +81,9 @@ public class VisitController {
     @ResponseStatus(HttpStatus.OK)
     //@Secured("ROLE_PATIENT")
     public Mono<Void> reserveVisitByPanelist(
-            @PathVariable String doctorId,
-            @PathVariable String visitId,
-            @RequestBody IdHolder patientIdHolder
+            @PathVariable @ObjectIdValid String doctorId,
+            @PathVariable @ObjectIdValid String visitId,
+            @RequestBody @Valid IdHolder patientIdHolder
     ){
         return visitService.reserveVisitByPatient(doctorId, visitId, patientIdHolder.getId());
     }
@@ -92,7 +94,7 @@ public class VisitController {
             @ApiResponse(code = 200, message = "OK"),
     })
     @ResponseStatus(HttpStatus.OK)
-    public Flux<ReservedVisitView> getPatientsVisits(@PathVariable long patientId){
+    public Flux<ReservedVisitView> getPatientsVisits(@PathVariable @ObjectIdValid String patientId){
         return visitService.getAllPatientsVisits(patientId);
     }
 
@@ -105,7 +107,7 @@ public class VisitController {
     })
     @ResponseStatus(HttpStatus.OK)
     //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public Mono<Void> assignDiseaseAndServicesToVisit(@PathVariable long visitId, @RequestBody PatientVisitCard patientVisitCard){
+    public Mono<Void> assignDiseaseAndServicesToVisit(@PathVariable @ObjectIdValid String visitId, @RequestBody PatientVisitCard patientVisitCard){
         return visitService.assignDiseaseAndMedicalServices(visitId, patientVisitCard);
     }
 
@@ -118,7 +120,7 @@ public class VisitController {
     })
     @ResponseStatus(HttpStatus.OK)
     //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public Mono<Void> changeVisitStatus(@PathVariable String visitId, @RequestParam VisitStatus status){
+    public Mono<Void> changeVisitStatus(@PathVariable @ObjectIdValid String visitId, @RequestParam VisitStatus status){
         return visitService.changeVisitStatus(visitId, status);
     }
 
@@ -130,7 +132,7 @@ public class VisitController {
     @ResponseStatus(code = HttpStatus.CREATED)
     @SneakyThrows
     //@Secured({ "ROLE_DOCTOR", "ROLE_ADMIN" })
-    public ResponseEntity generatePdf(@PathVariable String visitId){
+    public ResponseEntity generatePdf(@PathVariable @ObjectIdValid String visitId){
         String html = visitService.generateHTMLView(visitId);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 //        ITextRenderer renderer = new ITextRenderer();

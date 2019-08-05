@@ -14,8 +14,8 @@ import java.util.List;
 @FieldDefaults(level= AccessLevel.PRIVATE)
 public class PatientVisitCard {
 
-    List<Long> services;
-    List<Long> diseases;
+    List<String> services;
+    List<String> diseases;
     String mainSymptoms;
     String treatment;
     String allergy;

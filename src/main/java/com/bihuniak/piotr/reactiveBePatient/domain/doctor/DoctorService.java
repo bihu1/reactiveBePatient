@@ -4,6 +4,7 @@ import com.bihuniak.piotr.reactiveBePatient.common.mail.MailService;
 import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorDetails;
 import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorUpdate;
 import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorView;
+import com.bihuniak.piotr.reactiveBePatient.domain.patient.model.Patient;
 import com.bihuniak.piotr.reactiveBePatient.domain.profession.ProfessionRepository;
 import com.bihuniak.piotr.reactiveBePatient.domain.service.MedicalServiceRepository;
 import com.bihuniak.piotr.reactiveBePatient.domain.user.RoleRepository;
@@ -54,7 +55,7 @@ public class DoctorService {
                 .switchIfEmpty(Mono.error(new RuntimeException("A chuj blad z medical")))
                 .doOnNext(d -> d.setUsername(UUID.randomUUID().toString()))
                 .doOnNext(d -> d.setPassword(doctorPassword))
-                .doOnNext(d -> d.setRoles(singletonList(roleRepository.findByRole("ROLE_DOCTOR"))))
+                .doOnNext(d -> setRole(d))
                 .flatMap(doctorRepository::save)
                 .doOnNext(d -> mailService.sendSimpleMessage(
                         d.getEmail(),
@@ -62,6 +63,11 @@ public class DoctorService {
                         generateMessageContent(d.getUsername(), doctorPassword))
                 )
                 .then();
+    }
+
+    private void setRole(Doctor doctor){
+        roleRepository.findByRole("ROLE_DOCTOR")
+            .doOnNext(x -> doctor.getRoles().add(x));
     }
 
     public Mono<Void> updateDoctor(String doctorId, DoctorUpdate doctorUpdate) {

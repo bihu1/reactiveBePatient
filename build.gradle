@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.1.6.RELEASE'
 	id 'com.google.cloud.tools.jib' version '0.9.10'
 	id 'java'
+	id 'maven'
 }
 
 apply plugin: 'io.spring.dependency-management'
@@ -17,14 +18,21 @@ configurations {
 }
 
 repositories {
-	mavenCentral()
+	mavenLocal()
+	maven {
+		url = 'http://oss.jfrog.org/artifactory/oss-snapshot-local/'
+	}
+	maven {
+		url = 'http://repo.maven.apache.org/maven2'
+	}
 }
 
 dependencyManagement {
 	dependencies {
 		dependency group: 'ma.glasnost.orika', name: 'orika-core', version: '1.5.2'
-		dependency group: 'io.springfox', name: 'springfox-swagger2', version : '2.9.2'
-		dependency group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
+		dependency group: 'io.springfox', name: 'springfox-swagger2', version : '3.0.0-SNAPSHOT'
+		dependency group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0-SNAPSHOT'
+		dependency group: 'io.springfox', name: 'springfox-spring-webflux', version: '3.0.0-SNAPSHOT'
 		dependency group: 'com.opencsv' ,name:'opencsv' ,version: '4.0'
 		dependency group: 'org.jooq', name:'jool-java-8', version:'0.9.13'
 	}
@@ -36,9 +44,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 	implementation group: 'ma.glasnost.orika', name: 'orika-core'
-	
-	implementation group: 'io.springfox', name: 'springfox-swagger2'
-	implementation group: 'io.springfox', name: 'springfox-swagger-ui'
+
+	compile group: 'io.springfox', name: 'springfox-swagger2'
+	compile group: 'io.springfox', name: 'springfox-swagger-ui'
+	compile group: 'io.springfox', name: 'springfox-spring-webflux'
 
 	implementation group: 'com.opencsv' ,name:'opencsv'
 
@@ -50,6 +59,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 }
+
+
 
 jib{
 	from {

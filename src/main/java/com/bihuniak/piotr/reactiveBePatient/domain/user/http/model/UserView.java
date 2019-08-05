@@ -10,6 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserView {
-    long id;
+    String id;
     List<String> roles;
 }

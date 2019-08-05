@@ -1,9 +1,9 @@
 package com.bihuniak.piotr.reactiveBePatient.domain.doctor.mapper;
 
-import com.dryPepperoniStickTeam.bePatient.config.orika.Mapping;
-import com.dryPepperoniStickTeam.bePatient.config.orika.OrikaBeanMapping;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.Doctor;
-import com.dryPepperoniStickTeam.bePatient.domain.doctor.http.model.DoctorView;
+import com.bihuniak.piotr.reactiveBePatient.config.orika.Mapping;
+import com.bihuniak.piotr.reactiveBePatient.config.orika.OrikaBeanMapping;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.Doctor;
+import com.bihuniak.piotr.reactiveBePatient.domain.doctor.http.model.DoctorView;
 import ma.glasnost.orika.MapperFactory;
 
 @Mapping
